@@ -1,0 +1,23 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    ingress.kubernetes.io/allow-http: "true"
+    ingress.kubernetes.io/ssl-redirect: "true"
+    nginx.ingress.kubernetes.io/limit-rps: "10"
+    nginx.ingress.kubernetes.io/rewrite-target: /
+  name: governanca-dados
+  namespace: governanca-dados
+spec:
+  rules:
+  - host: monetizacao-cdr.hom.k8s.claro.com.br
+    http:
+      paths:
+      - path: /api
+        backend:
+          serviceName: governanca-dados-backend
+          servicePort: 8080
+  tls:
+    - hosts:
+      - monetizacao-cdr.hom.k8s.claro.com.br
+      secretName: monetizacao-cdr-selfsigned-cert-tls

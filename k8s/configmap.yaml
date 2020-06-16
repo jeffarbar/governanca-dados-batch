@@ -1,0 +1,12 @@
+kind: ConfigMap 
+apiVersion: v1 
+metadata:
+  name: backend-governanca-dados-configmap
+  namespace: governanca-dados
+data:
+  SPRING_PWC_DIR: /bi/kido/work/Parametros/
+  SPRING_PWC_URL: 10.54.16.90
+  LDAP_URL: ldap://10.28.28.100:389/dc=netfabteste,dc=corp2012
+  LDAP_TREE_PARAMS: OU=KIDO,OU=Groups,OU=WEB,OU=Applications,DC=netfabteste,DC=corp2012
+  LDAP_GROUP_ADMIN: KIDO_ADMIN
+  LDAP_LOGIN_DC_SUFFIX: netfabteste.corp2012

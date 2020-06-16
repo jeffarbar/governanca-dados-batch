@@ -1,0 +1,81 @@
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  name: backend-governanca-dados
+  namespace: governanca-dados
+spec:
+  replicas: 1
+  strategy:
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:
+        app: backend-governanca-dados
+    spec:
+      containers:
+      - name: backend-governanca-dados
+        image: harbor.claro.com.br/governanca-dados/governanca-dados-backend-img:v1.0.4
+        ports:  #added
+          - name: http     #added
+            containerPort: 8080 #added
+        env:
+          - name: SPRING_DATASOURCE_USERNAME
+            valueFrom:
+              secretKeyRef:
+                name: back-monetizacao-cdr-secret
+                key: SPRING_DATASOURCE_USERNAME
+          - name: SPRING_DATASOURCE_PASSWORD
+            valueFrom:
+              secretKeyRef:
+                name: back-monetizacao-cdr-secret
+                key: SPRING_DATASOURCE_PASSWORD
+          - name: SPRING_PWC_LOGIN
+            valueFrom:
+              secretKeyRef:
+                name: back-monetizacao-cdr-secret
+                key: SPRING_PWC_LOGIN
+          - name: SPRING_PWC_PASS
+            valueFrom:
+              secretKeyRef:
+                name: back-monetizacao-cdr-secret
+                key: SPRING_PWC_PASS
+          - name: SPRING_PWC_DIR
+            valueFrom:
+              configMapKeyRef:
+                name: back-monetizacao-cdr-configmap
+                key: SPRING_PWC_DIR
+          - name: SPRING_PWC_URL
+            valueFrom:
+              configMapKeyRef:
+                name: back-monetizacao-cdr-configmap
+                key: SPRING_PWC_URL
+          - name: SPRING_DATASOURCE_URL
+            valueFrom:
+              configMapKeyRef:
+                name: back-monetizacao-cdr-configmap
+                key: SPRING_DATASOURCE_URL
+          - name: LDAP_URL
+            valueFrom:
+              configMapKeyRef:
+                name: back-monetizacao-cdr-configmap
+                key: LDAP_URL
+          - name: LDAP_TREE_PARAMS
+            valueFrom:
+              configMapKeyRef:
+                name: back-monetizacao-cdr-configmap
+                key: LDAP_TREE_PARAMS
+          - name: LDAP_GROUP_ADMIN
+            valueFrom:
+              configMapKeyRef:
+                name: back-monetizacao-cdr-configmap
+                key: LDAP_GROUP_ADMIN
+          - name: LDAP_LOGIN_DC_SUFFIX
+            valueFrom:
+              configMapKeyRef:
+                name: back-monetizacao-cdr-configmap
+                key: LDAP_LOGIN_DC_SUFFIX
+      imagePullSecrets:
+      - name: harbor  
