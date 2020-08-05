@@ -1,5 +1,6 @@
 FROM amd64/openjdk:8-jre-alpine3.9
 
+
 LABEL author="Jefferson Farias"
 LABEL email="jefferson.barbosa@claro.com.br"
 LABEL company="CLARO"
