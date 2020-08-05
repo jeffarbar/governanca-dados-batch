@@ -22,10 +22,18 @@ import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableScheduling;
 import org.springframework.scheduling.annotation.Scheduled;
+
+import br.com.claro.batch.catalogo.dados.dto.CatalogoDadosDto;
+import br.com.claro.batch.catalogo.dados.dto.CatalogoDadosRelacionamentoDto;
 import br.com.claro.batch.catalogo.dados.model.CatalogoDadosModel;
 import br.com.claro.batch.catalogo.dados.policy.ParseCSVSkipperPolicy;
-import br.com.claro.batch.catalogo.dados.step.ProcessorOEMM;
-import br.com.claro.batch.catalogo.dados.step.ReaderOEMM;
+import br.com.claro.batch.catalogo.dados.step.ProcessorCSVOEMM;
+import br.com.claro.batch.catalogo.dados.step.ProcessorRelacionamentoXLSXOEMM;
+import br.com.claro.batch.catalogo.dados.step.ProcessorXLSXOEMM;
+import br.com.claro.batch.catalogo.dados.step.ReaderCSVOEMM;
+import br.com.claro.batch.catalogo.dados.step.ReaderRelacionamentoXLSXOEMM;
+import br.com.claro.batch.catalogo.dados.step.ReaderXLSXOEMM;
+import br.com.claro.batch.catalogo.dados.step.WriterRelacionamentoOEMM;
 import br.com.claro.batch.catalogo.dados.step.WriterOEMM;
 import br.com.claro.batch.catalogo.dados.util.DataUtil;
 import org.apache.logging.log4j.LogManager;
@@ -48,28 +56,97 @@ public class BatchSchedulerOEMM {
     private SimpleJobLauncher jobLauncher;
     
     @Autowired
-    private ReaderOEMM reader;
+    private ReaderXLSXOEMM readerXLSX;
     
+    @Autowired
+    private ReaderRelacionamentoXLSXOEMM readerRelacionamentoXLSXOEMM;
+    
+    @Autowired
+    private ProcessorXLSXOEMM processorXLSX;
+    
+    @Autowired
+    private ProcessorRelacionamentoXLSXOEMM processorRelacionamentoXLSXOEMM;
+    
+    @Autowired
+    private ReaderCSVOEMM readerCSV;
+    
+ 
+    @Autowired
+    private ProcessorCSVOEMM processorCSV;
+
     @Autowired
     private WriterOEMM writer;
     
     @Autowired
-    private ProcessorOEMM processor;
+    private WriterRelacionamentoOEMM writerRelacionamento;
     
-	@Value("${csv.dir.processado}")
-    private String csvDirProcessado;
+	@Value("${dir.processado}")
+    private String dirProcessado;
 	
-	@Value("${csv.dir.erro}")
-    private String csvDirErro;
+	@Value("${dir.erro}")
+    private String dirErro;
     
 	@Value("${csv.arquivo}")
     private String arquivoCSV;
+
+	@Value("${xlsx.arquivo}")
+    private String arquivoXLSX;
+
+	@Value("${xlsx.arquivo.relacionamento}")
+    private String arquivoRelacionamentoXLSX;
 	
 	@Value("${batch.quantidade.lote}")
 	private int qtdeLote;
     
-	@Scheduled(cron = "${scheduling.job.cron}")	
-	public void inicia() throws Exception {
+	@Scheduled(cron = "${scheduling.xlsx.job.cron}")	
+	public void iniciaXLSX() throws Exception {
+		
+		if( Files.exists(Paths.get(arquivoXLSX)) ) {
+		
+			logger.info("Job inicial :"+ new Date());
+			
+			JobParameters param = new JobParametersBuilder().addString("JobID",
+			String.valueOf(System.currentTimeMillis())).toJobParameters();
+			JobExecution execution = jobLauncher.run(jobXLSX(), param);
+			
+			logger.info("Job finalizado status: " + execution.getStatus());
+			
+			if( execution.getStatus() == BatchStatus.COMPLETED ) {
+				Files.move(Paths.get(arquivoXLSX), Paths.get(dirProcessado, "xlsx_" + geraNomeSaidaXLSX() ), StandardCopyOption.REPLACE_EXISTING);
+				iniciaRelacionamentoXLSX();
+			}else {
+				Files.move(Paths.get(arquivoXLSX), Paths.get(dirErro, "xlsx_" + geraNomeSaidaXLSX() ), StandardCopyOption.REPLACE_EXISTING);
+			}
+		}else {
+			logger.warn("Não tem o arquivo ["+Paths.get(arquivoXLSX)+"]");
+			iniciaRelacionamentoXLSX();
+		}
+	}
+	
+	private void iniciaRelacionamentoXLSX() throws Exception {
+		
+		if( Files.exists(Paths.get(arquivoRelacionamentoXLSX)) ) {
+		
+			logger.info("Job inicial relacionamento :"+ new Date());
+			
+			JobParameters param = new JobParametersBuilder().addString("JobID",
+			String.valueOf(System.currentTimeMillis())).toJobParameters();
+			JobExecution execution = jobLauncher.run(jobRelacionamentoXLSX(), param);
+			
+			logger.info("Job finalizado relacionamento status: " + execution.getStatus());
+			
+			if( execution.getStatus() == BatchStatus.COMPLETED ) {
+				Files.move(Paths.get(arquivoRelacionamentoXLSX), Paths.get(dirProcessado, "xlsxRelacionamento_" + geraNomeSaidaXLSX() ), StandardCopyOption.REPLACE_EXISTING);
+			}else {
+				Files.move(Paths.get(arquivoRelacionamentoXLSX), Paths.get(dirErro, "xlsxRelacionamento_" + geraNomeSaidaXLSX() ), StandardCopyOption.REPLACE_EXISTING);
+			}
+		}else {
+			logger.warn("Não tem o arquivo relacionamento ["+Paths.get(arquivoRelacionamentoXLSX)+"]");
+		}
+	}
+	
+	@Scheduled(cron = "${scheduling.csv.job.cron}")	
+	public void iniciaCSV() throws Exception {
 		
 		if( Files.exists(Paths.get(arquivoCSV)) ) {
 		
@@ -77,28 +154,52 @@ public class BatchSchedulerOEMM {
 			
 			JobParameters param = new JobParametersBuilder().addString("JobID",
 			String.valueOf(System.currentTimeMillis())).toJobParameters();
-			JobExecution execution = jobLauncher.run(job(), param);
+			JobExecution execution = jobLauncher.run(jobCSV(), param);
 			
 			logger.info("Job finalizado status: " + execution.getStatus());
 			
 			if( execution.getStatus() == BatchStatus.COMPLETED ) {
-				Files.move(Paths.get(arquivoCSV), Paths.get(csvDirProcessado, geraNomeSaida() ), StandardCopyOption.REPLACE_EXISTING);
+				Files.move(Paths.get(arquivoCSV), Paths.get(dirProcessado, "csv_" + geraNomeSaidaCSV() ), StandardCopyOption.REPLACE_EXISTING);
 			}else {
-				Files.move(Paths.get(arquivoCSV), Paths.get(csvDirErro, geraNomeSaida() ), StandardCopyOption.REPLACE_EXISTING);
+				Files.move(Paths.get(arquivoCSV), Paths.get(dirErro, "csv_" + geraNomeSaidaCSV() ), StandardCopyOption.REPLACE_EXISTING);
 			}
 		}else {
 			logger.warn("Não tem o arquivo ["+Paths.get(arquivoCSV)+"]");
 		}
 	}
 	
-	private String geraNomeSaida() {
+	
+	
+	private String geraNomeSaidaCSV() {
 		return "arquivo_" + DataUtil.getDataHodaAtual()+".csv";
 	}
 	
-    public Job job() {
-        return jobBuilderFactory.get("job")
+	private String geraNomeSaidaXLSX() {
+		return "arquivo_" + DataUtil.getDataHodaAtual()+".xlsx";
+	}
+	
+    public Job jobCSV() {
+        return jobBuilderFactory.get("jobCSV")
                 .incrementer(new RunIdIncrementer())
-                .flow(step1())
+                .flow(stepCSV())
+                .end()
+                .preventRestart()
+                .build();
+    }
+    
+    public Job jobXLSX() {
+        return jobBuilderFactory.get("jobXLSX")
+                .incrementer(new RunIdIncrementer())
+                .flow(stepXLSX())
+                .end()
+                .preventRestart()
+                .build();
+    }
+    
+    public Job jobRelacionamentoXLSX() {
+        return jobBuilderFactory.get("jobRelacionamentoXLSX")
+                .incrementer(new RunIdIncrementer())
+                .flow(stepRelacionamentoXLSX())
                 .end()
                 .preventRestart()
                 .build();
@@ -109,11 +210,30 @@ public class BatchSchedulerOEMM {
         return new ParseCSVSkipperPolicy();
     }
   
-    public Step step1() {
-        return stepBuilderFactory.get("step1")
+    public Step stepXLSX() {
+        return stepBuilderFactory.get("stepXLSX")
+                .<CatalogoDadosDto, CatalogoDadosModel> chunk(qtdeLote)
+                .reader(readerXLSX.reader())
+                .processor(processorXLSX)
+                .writer(writer)
+                .build();
+    }
+    
+    public Step stepRelacionamentoXLSX() {
+        return stepBuilderFactory.get("stepRelacionamentoXLSX")
+                .<CatalogoDadosRelacionamentoDto, CatalogoDadosModel> chunk(qtdeLote)
+                .reader(readerRelacionamentoXLSXOEMM.reader())
+                .processor(processorRelacionamentoXLSXOEMM)
+                .writer(writerRelacionamento)
+                .build();
+    }
+    
+    
+    public Step stepCSV() {
+        return stepBuilderFactory.get("stepCSV")
                 .<CatalogoDadosModel, CatalogoDadosModel> chunk(qtdeLote)
-                .reader(reader.reader()).faultTolerant().skipPolicy(skipParseCSVSkipper())
-                .processor(processor)
+                .reader(readerCSV.reader()).faultTolerant().skipPolicy(skipParseCSVSkipper())
+                .processor(processorCSV)
                 .writer(writer)
                 .build();
     }

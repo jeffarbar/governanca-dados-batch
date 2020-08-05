@@ -17,9 +17,9 @@ import br.com.claro.batch.catalogo.dados.model.CatalogoDadosModel;
 
 
 @Component
-public class ReaderOEMM {
+public class ReaderCSVOEMM {
 
-	private static final Logger logger = LogManager.getLogger(ReaderOEMM.class);
+	private static final Logger logger = LogManager.getLogger(ReaderCSVOEMM.class);
 	
 	@Value("${csv.arquivo}")
     private String arquivoCSV;	

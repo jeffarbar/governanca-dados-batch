@@ -9,9 +9,9 @@ import br.com.claro.batch.catalogo.dados.model.CatalogoDadosModel;
 
 
 @Component
-public class ProcessorOEMM implements ItemProcessor<CatalogoDadosModel, CatalogoDadosModel> {
+public class ProcessorCSVOEMM implements ItemProcessor<CatalogoDadosModel, CatalogoDadosModel> {
 
-	private static final Logger logger = LogManager.getLogger(ProcessorOEMM.class);
+	private static final Logger logger = LogManager.getLogger(ProcessorCSVOEMM.class);
 	
 	@Override
 	 public CatalogoDadosModel process(CatalogoDadosModel catalogoDadosModel) throws Exception {

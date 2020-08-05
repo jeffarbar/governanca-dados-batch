@@ -5,8 +5,8 @@
             <PatternLayout pattern="%d{HH:mm:ss.SSS} [%t] %-5level %logger{36} - %msg%n"/>
         </Console>
 
-        <RollingRandomAccessFile name="LogToRollingRandomAccessFile" fileName="/app/logs/catalogo-batch.log"
-               filePattern="/app/logs/${date:yyyy-MM}/catalogo-batch-%d{MM-dd-yyyy}-%i.log.gz">
+        <RollingRandomAccessFile name="LogToRollingRandomAccessFile" fileName="./input/logs/catalogo-batch.log"
+               filePattern="./input/logs/${date:yyyy-MM}/catalogo-batch-%d{MM-dd-yyyy}-%i.log.gz">
             <PatternLayout>
                 <Pattern>%d %p %c{1.} [%t] %m%n</Pattern>
             </PatternLayout>

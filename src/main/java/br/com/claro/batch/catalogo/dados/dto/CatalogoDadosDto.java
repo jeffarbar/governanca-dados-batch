@@ -1,30 +1,10 @@
-package br.com.claro.batch.catalogo.dados.model;
+package br.com.claro.batch.catalogo.dados.dto;
 
-import org.springframework.beans.BeanUtils;
-import org.springframework.data.annotation.Id;
-import org.springframework.data.elasticsearch.annotations.Document;
+public class CatalogoDadosDto {
 
-import br.com.claro.batch.catalogo.dados.dto.CatalogoDadosDto;
-import br.com.claro.batch.catalogo.dados.dto.CatalogoDadosRelacionamentoDto;
-
-//analogia indexName==banco de dados, type==tabela
-@Document(indexName = "governanca", type = "catalogodados")
-public class CatalogoDadosModel {
-
-	public CatalogoDadosModel() {}
-	
-	public CatalogoDadosModel(CatalogoDadosDto item) {
-		BeanUtils.copyProperties(item , this);	
-	}
-	
-	@Id
-	private String id;
-	
 	private String bancoDado;
 	
 	private String parentPath; 
-	
-	private String nameTable;
 	
 	private String name; 
 	
@@ -67,14 +47,6 @@ public class CatalogoDadosModel {
 	private String linkDocuments; 
 
 	private String producao;
-
-	public String getId() {
-		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
 
 	public String getBancoDado() {
 		return bancoDado;
@@ -258,27 +230,6 @@ public class CatalogoDadosModel {
 
 	public void setProducao(String producao) {
 		this.producao = producao;
-	}
-
-	public String getNameTable() {
-		return nameTable;
-	}
-
-	public void setNameTable(String nameTable) {
-		this.nameTable = nameTable;
-	}
-
-	@Override
-	public String toString() {
-		return "CatalogoDadosModel [id=" + id + ", bancoDado=" + bancoDado + ", parentPath=" + parentPath
-				+ ", nameTable=" + nameTable + ", name=" + name + ", definition=" + definition + ", status=" + status
-				+ ", type=" + type + ", abbreviation=" + abbreviation + ", alternativeAbbreviation="
-				+ alternativeAbbreviation + ", documentation=" + documentation + ", dataType=" + dataType + ", state="
-				+ state + ", dataOwner=" + dataOwner + ", dataSteward=" + dataSteward + ", dominioNegocio="
-				+ dominioNegocio + ", assunto=" + assunto + ", origem=" + origem + ", dominioDados=" + dominioDados
-				+ ", subDominioDados=" + subDominioDados + ", confidencialidade=" + confidencialidade
-				+ ", grupoDominioDados=" + grupoDominioDados + ", importancia=" + importancia + ", linkDocuments="
-				+ linkDocuments + ", producao=" + producao + "]";
 	}
 
 }
